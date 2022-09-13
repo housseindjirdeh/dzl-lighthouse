@@ -5,8 +5,8 @@ set -euo pipefail
 DIRNAME="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 cd $DIRNAME
 
-CLOUDSDK_CORE_PROJECT=lighthouse-infrastructure
-ZONE=us-central1-a
+CLOUDSDK_CORE_PROJECT=chrome-aurora
+ZONE=us-east4-a
 
 EXTRA_ARG=${1:-nokill}
 
@@ -15,7 +15,7 @@ INSTANCES=$(gcloud --project=$CLOUDSDK_CORE_PROJECT compute instances list | gre
 for instance in $INSTANCES
 do
   printf "Checking status of $instance..."
-  COMMAND="bash -c 'tail collect.log | grep \"Run complete\"'"
+  COMMAND="bash -c 'tail /home/lighthouse/collect.log | grep \"Run complete\"'"
   if gcloud --project="$CLOUDSDK_CORE_PROJECT" compute ssh lighthouse@$instance "--command=$COMMAND" --zone="$ZONE" > /dev/null ; then
     printf "Done!\n"
 

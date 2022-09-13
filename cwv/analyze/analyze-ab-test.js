@@ -13,6 +13,7 @@ const METRICS_TO_USE = new Set([
   'speedIndex',
   'totalBlockingTime',
   'cumulativeLayoutShift',
+  'responsiveness',
 ])
 
 /**

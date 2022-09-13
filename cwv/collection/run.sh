@@ -18,10 +18,10 @@ do
   bash ./run-on-url.sh "$url" "$BLOCKED_PATTERNS" || echo "Run on $url failed :("
 done
 
-cp entity.txt data/
-cp urls.txt data/
-cp blocked-patterns.txt data/
-tar -czf trace-data.tar.gz data/
-find data/ -name "lhr.json" -o -name "*.txt" | tar -czf lhr-data.tar.gz -T -
+sudo cp entity.txt data/
+sudo cp urls.txt data/
+sudo cp blocked-patterns.txt data/
+sudo tar -czf trace-data.tar.gz data/
+sudo find data/ -name "lhr.json" -o -name "*.txt" | sudo tar -czf lhr-data.tar.gz -T -
 
 echo "Run complete!"

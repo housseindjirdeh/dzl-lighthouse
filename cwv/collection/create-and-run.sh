@@ -4,8 +4,8 @@ set -euxo pipefail
 
 INSTANCE_SUFFIX=${1:-instance0}
 INSTANCE_NAME="cwv-collect-$INSTANCE_SUFFIX"
-CLOUDSDK_CORE_PROJECT=lighthouse-infrastructure
-ZONE=us-central1-a
+CLOUDSDK_CORE_PROJECT=chrome-aurora
+ZONE=us-east4-a
 
 gcloud --project="$CLOUDSDK_CORE_PROJECT" compute instances create $INSTANCE_NAME \
   --image-family=ubuntu-1804-lts --image-project=ubuntu-os-cloud \
@@ -32,14 +32,14 @@ gcloud --project="$CLOUDSDK_CORE_PROJECT" compute scp ./blocked-patterns.txt $IN
 gcloud --project="$CLOUDSDK_CORE_PROJECT" compute scp ./run.sh $INSTANCE_NAME:/tmp/run.sh --zone="$ZONE"
 gcloud --project="$CLOUDSDK_CORE_PROJECT" compute scp ./run-on-url.sh $INSTANCE_NAME:/tmp/run-on-url.sh --zone="$ZONE"
 gcloud --project="$CLOUDSDK_CORE_PROJECT" compute ssh $INSTANCE_NAME --command="bash /tmp/setup-machine.sh" --zone="$ZONE"
-gcloud --project="$CLOUDSDK_CORE_PROJECT" compute ssh lighthouse@$INSTANCE_NAME --command="sh -c 'nohup /home/lighthouse/run.sh > /home/lighthouse/collect.log 2>&1 < /dev/null &'" --zone="$ZONE"
+gcloud --project="$CLOUDSDK_CORE_PROJECT" compute ssh lighthouse@$INSTANCE_NAME --command="sudo -u lighthouse sh -c 'nohup /home/lighthouse/run.sh > /home/lighthouse/collect.log 2>&1 < /dev/null &'" --zone="$ZONE" --verbosity=error
 
 set +x
 
 echo "Collection has started."
 echo "Check-in on progress anytime by running..."
-echo "  $ gcloud --project="$CLOUDSDK_CORE_PROJECT" compute ssh lighthouse@$INSTANCE_NAME --command='tail -f collect.log' --zone=$ZONE"
+echo "  $ bash collection/fleet-status.sh"
 
 echo "When complete run..."
-echo "  $ gcloud --project="$CLOUDSDK_CORE_PROJECT" compute scp $INSTANCE_NAME:/home/lighthouse/trace-data.tar.gz ./trace-data.tar.gz"
-echo "  $ gcloud --project="$CLOUDSDK_CORE_PROJECT" compute instances delete $INSTANCE_NAME"
+echo "  $ bash analyze/preprocess.sh"
+echo "  $ node analyze/analyze-ab-test.js > results.csv"

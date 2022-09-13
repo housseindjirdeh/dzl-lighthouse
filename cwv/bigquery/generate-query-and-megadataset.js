@@ -1,63 +1,105 @@
-const fs = require('fs')
-const path = require('path')
-const thirdPartyWeb = require('third-party-web')
+const fs = require("fs");
+const path = require("path");
+const thirdPartyWeb = require("third-party-web");
 
-const SQL_IN = fs.readFileSync(path.join(__dirname, 'pages-for-entity.sql'), 'utf8')
+const SQL_IN = fs.readFileSync(
+  path.join(__dirname, "pages-for-entity.sql"),
+  "utf8"
+);
+
+// const entityDomains = [
+//   'doubleclick.net',
+//   'youtube.com',
+//   'facebook.com',
+//   'mc.yandex.ru',
+//   'fonts.gstatic.com',
+//   'maps.google.com',
+//   'google-analytics.com',
+//   'zendesk.com',
+//   'addthis.com',
+//   'abs.twimg.com',
+// ]
+
+const mockThirdPartyWebEntities = [
+  {
+    name: "Google Maps JS",
+    company: "Google",
+    homepage: "https://www.google.com/maps",
+    categories: ["utility"],
+    domains: ["maps.googleapis.com/maps/api/js"],
+  },
+  {
+    name: "Google Maps Static",
+    company: "Google",
+    homepage: "https://www.google.com/maps",
+    categories: ["utility"],
+    domains: ["maps.googleapis.com/maps/api/staticmap"],
+  },
+];
 
 const entityDomains = [
-  'doubleclick.net',
-  'youtube.com',
-  'facebook.com',
-  'mc.yandex.ru',
-  'fonts.gstatic.com',
-  'maps.google.com',
-  'google-analytics.com',
-  'zendesk.com',
-  'addthis.com',
-  'abs.twimg.com',
-]
+  "maps.googleapis.com/maps/api/js",
+  "maps.googleapis.com/maps/api/staticmap",
+];
 
-const MEGADATASET = []
-const WHERE_CLAUSES = []
+const MEGADATASET = [];
+const WHERE_CLAUSES = [];
 for (const entityDomain of entityDomains) {
-  const entity = thirdPartyWeb.getEntity(entityDomain)
-  if (!entity) throw new Error(`No entity for ${entityDomain}`)
+  // const entity = thirdPartyWeb.getEntity(entityDomain);
+  const entity = mockThirdPartyWebEntities.find((entity) =>
+    entity.domains.includes(entityDomain)
+  );
+  if (!entity) throw new Error(`No entity for ${entityDomain}`);
   const domains = Array.from(
     new Set(
       entity.domains.map((domain) =>
-        domain.replace(/\*/g, '').replace(/adservice.google..*/, 'adservice.google.'),
-      ),
-    ),
-  ).map((domain) => (domain.endsWith('.') ? domain : `${domain}/`))
+        domain
+          .replace(/\*/g, "")
+          .replace(/adservice.google..*/, "adservice.google.")
+      )
+    )
+  ).map((domain) => (domain.endsWith(".") ? domain : `${domain}/`));
 
   WHERE_CLAUSES.push(
     [
       `${entity.name}`,
       `AND (`,
-      ...domains.map((domain, index) => `  ${index === 0 ? '' : 'OR '}url LIKE '%${domain}%'`),
+      ...domains.map(
+        (domain, index) => `  ${index === 0 ? "" : "OR "}url LIKE '%${domain}%'`
+      ),
       `)`,
     ]
       .map((l) => `  -- ${l}`)
-      .join('\n'),
-  )
+      .join("\n")
+  );
 
-  const safeName = entity.name.toLowerCase().replace(/[^a-z0-9]+/g, '-')
-  const expectedFilePath = path.join(__dirname, 'datasets', `${safeName}-urls.json`)
+  const safeName = entity.name.toLowerCase().replace(/[^a-z0-9]+/g, "-");
+  const expectedFilePath = path.join(
+    __dirname,
+    "datasets",
+    `${safeName}-urls.json`
+  );
   if (fs.existsSync(expectedFilePath)) {
-    console.warn(`Dataset found for ${entity.name}`)
-    const dataset = JSON.parse(fs.readFileSync(expectedFilePath, 'utf8'))
+    console.warn(`Dataset found for ${entity.name}`);
+    const dataset = JSON.parse(fs.readFileSync(expectedFilePath, "utf8"));
     MEGADATASET.push({
       entity,
       domain: entityDomain,
       patterns: domains,
       urls: dataset.map((item) => item.pageUrl),
-    })
+    });
   } else {
-    console.warn(`Dataset NOT found for ${entity.name}`)
+    console.warn(`Dataset NOT found for ${entity.name}`);
   }
 }
 
-const MEGASET_OUT = JSON.stringify(MEGADATASET, null, 2)
-const SQL_OUT = SQL_IN.replace('--INSERT ENTITY QUERY HERE--', WHERE_CLAUSES.join('\n'))
-fs.writeFileSync(path.join(__dirname, 'pages-for-entity.gen.sql'), SQL_OUT)
-fs.writeFileSync(path.join(__dirname, 'datasets', 'megadataset.gen.json'), MEGASET_OUT)
+const MEGASET_OUT = JSON.stringify(MEGADATASET, null, 2);
+const SQL_OUT = SQL_IN.replace(
+  "--INSERT ENTITY QUERY HERE--",
+  WHERE_CLAUSES.join("\n")
+);
+fs.writeFileSync(path.join(__dirname, "pages-for-entity.gen.sql"), SQL_OUT);
+fs.writeFileSync(
+  path.join(__dirname, "datasets", "megadataset.gen.json"),
+  MEGASET_OUT
+);

@@ -5,8 +5,8 @@ set -euxo pipefail
 DIRNAME="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 cd $DIRNAME
 
-CLOUDSDK_CORE_PROJECT=lighthouse-infrastructure
-ZONE=us-central1-a
+CLOUDSDK_CORE_PROJECT=chrome-aurora
+ZONE=us-east4-a
 
 for instanceid in $@
 do

@@ -11,7 +11,7 @@ whoami
 export HOME="/home/lighthouse"
 
 cd /home/lighthouse
-mkdir -p ./data
+sudo -u lighthouse mkdir -p ./data || echo "Failed to mkdir data"
 cd ./data
 
 # Import NUMBER_OF_RUNS vars
